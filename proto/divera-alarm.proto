@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+option go_package = "github.com/CaptainStandby/divera-monitor/proto";
+
+message Alarm {
+
+	message Timestamp {
+		// Represents seconds of UTC time since Unix epoch
+		// 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to
+		// 9999-12-31T23:59:59Z inclusive.
+		int64 seconds = 1;
+	}
+
+	message LatLng {
+		double latitude = 1;
+		double longitude = 2;
+	}
+
+	int64 id = 1;
+	string foreign_id = 2;
+	string title = 3;
+	string text = 4;
+	string address = 5;
+	LatLng position = 6;
+	bool priority = 7;
+	Timestamp created = 8;
+	Timestamp updated = 9;
+}
