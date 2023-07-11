@@ -12,16 +12,9 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /build/alarm-daemon
 
 # ---
 
-FROM alpine:3.18 as certs
-RUN apk add --no-cache ca-certificates
-
-# ---
-
-FROM scratch
+FROM gcr.io/distroless/static-debian11:nonroot
 
 WORKDIR /
-
-COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 COPY --from=builder /build/alarm-daemon /alarm-daemon
 
