@@ -52,7 +52,7 @@ func handler(ctx context.Context, msg *pubsub.Message) {
 func main() {
 	projectID := os.Getenv("PROJECT_ID")
 	if projectID == "" {
-		log.Fatal("PROJECT_ID environment variable is not set")
+		projectID = pubsub.DetectProjectID
 	}
 	subscriptionName := os.Getenv("SUBSCRIPTION_NAME")
 	if subscriptionName == "" {
@@ -61,7 +61,7 @@ func main() {
 
 	ctx := context.Background()
 
-	cred, err := google.FindDefaultCredentials(ctx)
+	cred, err := google.FindDefaultCredentials(ctx, pubsub.ScopePubSub)
 	if err != nil {
 		log.Fatalf("google.FindDefaultCredentials: %s", err)
 	}
@@ -78,11 +78,11 @@ func main() {
 	}
 
 	go func() {
-	log.Println("Start receiving messages")
+		log.Println("Start receiving messages")
 
-	err = sub.Receive(ctx, handler)
-	if err != nil {
-		log.Fatalf("sub.Receive: %s", err)
+		err = sub.Receive(ctx, handler)
+		if err != nil {
+			log.Fatalf("sub.Receive: %s", err)
 		}
 	}()
 
