@@ -49,22 +49,6 @@ func handler(ctx context.Context, msg *pubsub.Message) {
 	msg.Ack()
 }
 
-func getContext() context.Context {
-	ctx, cancel := context.WithCancel(context.Background())
-
-	c := make(chan os.Signal, 1)
-	signal.Notify(c,
-		syscall.SIGTERM,
-		syscall.SIGINT,
-	)
-	go func() {
-		defer cancel()
-		<-c
-		log.Println("Shutdown requested")
-	}()
-	return ctx
-}
-
 func main() {
 	projectID := os.Getenv("PROJECT_ID")
 	if projectID == "" {
@@ -75,7 +59,7 @@ func main() {
 		log.Fatal("SUBSCRIPTION_NAME environment variable is not set")
 	}
 
-	ctx := getContext()
+	ctx := context.Background()
 
 	cred, err := google.FindDefaultCredentials(ctx)
 	if err != nil {
@@ -93,12 +77,33 @@ func main() {
 		log.Fatalf("client.Subscription(%s) returned nil", subscriptionName)
 	}
 
+	go func() {
 	log.Println("Start receiving messages")
 
 	err = sub.Receive(ctx, handler)
 	if err != nil {
 		log.Fatalf("sub.Receive: %s", err)
+		}
+	}()
+
+	waitForShutdown(client)
+}
+
+func waitForShutdown(client *pubsub.Client) {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c,
+		os.Interrupt,
+		syscall.SIGTERM,
+		syscall.SIGINT,
+	)
+	<-c
+	log.Println("Shutdown requested")
+
+	err := client.Close()
+	if err != nil {
+		log.Fatalf("client.Close: %s", err)
 	}
 
 	log.Println("Shutdown complete")
+	os.Exit(0)
 }
