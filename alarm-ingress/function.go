@@ -6,8 +6,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
@@ -72,15 +70,6 @@ func init() {
 	if err != nil {
 		log.Fatalf("pubsub.NewClient: %s", err)
 	}
-	c := make(chan os.Signal, 1)
-	signal.Notify(c,
-		syscall.SIGTERM,
-		syscall.SIGINT,
-	)
-	go func() {
-		defer client.Close()
-		<-c
-	}()
 
 	topic = client.Topic(topicName)
 	if topic == nil {
