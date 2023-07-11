@@ -52,7 +52,7 @@ var topic *pubsub.Topic
 func init() {
 	projectID := os.Getenv("PROJECT_ID")
 	if projectID == "" {
-		log.Fatal("PROJECT_ID environment variable is not set")
+		projectID = pubsub.DetectProjectID
 	}
 	topicName := os.Getenv("TOPIC_NAME")
 	if topicName == "" {
@@ -61,7 +61,7 @@ func init() {
 
 	ctx := context.Background()
 
-	cred, err := google.FindDefaultCredentials(ctx)
+	cred, err := google.FindDefaultCredentials(ctx, pubsub.ScopePubSub)
 	if err != nil {
 		log.Fatalf("google.FindDefaultCredentials: %s", err)
 	}
