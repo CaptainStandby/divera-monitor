@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/pkg/errors"
@@ -30,13 +31,24 @@ type jsonAlarm struct {
 }
 
 func convertToProto(alarm *jsonAlarm) *messages.Alarm {
+	lat, err := strconv.ParseFloat(alarm.Lat, 64)
+	if err != nil {
+		log.Printf("could not parse latitude: %s", err.Error())
+		lat = 0
+	}
+	lng, err := strconv.ParseFloat(alarm.Lng, 64)
+	if err != nil {
+		log.Printf("could not parse longitude: %s", err.Error())
+		lng = 0
+	}
+
 	return &messages.Alarm{
 		Id:        alarm.ID,
 		ForeignId: alarm.ForeignID,
 		Title:     alarm.Title,
 		Text:      alarm.Text,
 		Address:   alarm.Address,
-		Position:  &messages.Alarm_LatLng{Latitude: /*alarm.Lat*/ 0, Longitude: /*alarm.Lng*/ 0},
+		Position:  &messages.Alarm_LatLng{Latitude: lat, Longitude: lng},
 		Priority:  alarm.Priority != 0,
 		Created:   &messages.Alarm_Timestamp{Seconds: alarm.Created},
 		Updated:   &messages.Alarm_Timestamp{Seconds: alarm.Updated},
@@ -77,6 +89,7 @@ func handle(w http.ResponseWriter, r *http.Request, pushAlarm func(context.Conte
 		return
 	}
 
+	// DEBUG ONLY
 	log.Printf("body: %s", body)
 
 	msg := &jsonAlarm{}
