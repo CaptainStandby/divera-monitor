@@ -5,7 +5,7 @@ data "archive_file" "alarm_ingress_source" {
   source_dir  = "${path.module}/../alarm-ingress"
   excludes = [
     "cmd",
-    "function_test.go"
+    "alarm_test.go"
   ]
 }
 
