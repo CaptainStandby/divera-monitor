@@ -3,7 +3,6 @@ package alarm
 import (
 	"context"
 	"encoding/json"
-	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -82,18 +81,9 @@ func handle(w http.ResponseWriter, r *http.Request, pushAlarm func(context.Conte
 		return
 	}
 
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Println(err.Error())
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	// DEBUG ONLY
-	log.Printf("body: %s", body)
-
+	decoder := json.NewDecoder(r.Body)
 	msg := &jsonAlarm{}
-	err = json.Unmarshal(body, msg)
+	err := decoder.Decode(msg)
 	if err != nil {
 		log.Println(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
