@@ -38,10 +38,9 @@ resource "google_service_account" "subscriber" {
   display_name = "Divera Alarm Subscriber Service Account"
 }
 
-resource "google_service_account_key" "subscriber-key" {
-  // TODO: This should not be done via Terraform, because it stores the private key in the state unencrypted.
+resource "google_service_account_key" "subscriber_key" {
   service_account_id = google_service_account.subscriber.id
-  private_key_type   = "TYPE_GOOGLE_CREDENTIALS_FILE"
+  public_key_data    = base64encode(trimspace(var.subscriber_public_key))
 }
 
 resource "google_pubsub_subscription_iam_binding" "pubsub_subscriber" {

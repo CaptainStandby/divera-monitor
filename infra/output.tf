@@ -10,7 +10,14 @@ output "topic_name" {
   value = google_pubsub_topic.divera_alarm.name
 }
 
-output "subscriber_key" {
-  value     = google_service_account_key.subscriber-key.private_key
-  sensitive = true
+output "subscriber_key_id" {
+  value = google_service_account_key.subscriber_key.id
+}
+
+output "subscriber_email" {
+  value = google_service_account.subscriber.email
+}
+
+output "subscriber_id" {
+  value = google_service_account.subscriber.unique_id
 }

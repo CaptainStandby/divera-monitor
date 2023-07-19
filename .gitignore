@@ -3,3 +3,5 @@
 *.tfstate*
 .bin/
 .tmp/
+out/
+.build/
