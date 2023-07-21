@@ -67,7 +67,16 @@ func watcher(
 	switchOn, switchOff trigger,
 	timer alarmTimer) {
 
-	// TODO: check if alarm is active on startup
+	activate := func() {
+		if timer.isActive() {
+			log.Printf("watcher: alarm is active, switching on\n")
+			if err := switchOn(ctx); err != nil {
+				log.Printf("watcher: switchOn err: %v\n", err)
+			}
+		}
+	}
+
+	activate()
 
 	for {
 		select {
@@ -77,13 +86,7 @@ func watcher(
 
 		case msg := <-pipeline:
 			timer.update(toTime(msg.Updated))
-
-			if timer.isActive() {
-				log.Printf("watcher: alarm is active, switching on\n")
-				if err := switchOn(ctx); err != nil {
-					log.Printf("watcher: switchOn err: %v\n", err)
-				}
-			}
+			activate()
 
 		case <-timer.standby():
 			log.Println("watcher: alarm has expired, switching off")
@@ -237,24 +240,27 @@ func storeLastAlarmTime(lastAlarmFile string, t time.Time) {
 }
 
 func loadLastAlarmTime(lastAlarmFile string) time.Time {
-	if lastAlarmFile != "" {
-		if f, err := os.Open(lastAlarmFile); err == nil {
-			defer f.Close()
-			scanner := bufio.NewScanner(f)
-			if scanner.Scan() {
-				if t, err := time.Parse(time.RFC3339, scanner.Text()); err == nil {
-					log.Printf("last alarm time: %s\n", t)
-					return t
-				} else {
-					log.Printf("could not parse last alarm time from %s: %v\n", lastAlarmFile, err)
-				}
+	if lastAlarmFile == "" {
+		return time.Unix(0, 0)
+	}
+
+	if f, err := os.Open(lastAlarmFile); err == nil {
+		defer f.Close()
+		scanner := bufio.NewScanner(f)
+		if scanner.Scan() {
+			if t, err := time.Parse(time.RFC3339, scanner.Text()); err == nil {
+				log.Printf("last alarm time: %s\n", t)
+				return t
 			} else {
-				log.Printf("could not read last alarm time from %s: %v\n", lastAlarmFile, err)
+				log.Printf("could not parse last alarm time from %s: %v\n", lastAlarmFile, err)
 			}
 		} else {
-			log.Printf("could not open last alarm file %s: %v\n", lastAlarmFile, err)
+			log.Printf("could not read last alarm time from %s: %v\n", lastAlarmFile, err)
 		}
+	} else {
+		log.Printf("could not open last alarm file %s: %v\n", lastAlarmFile, err)
 	}
+
 	return time.Unix(0, 0)
 }
 
