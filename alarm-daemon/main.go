@@ -26,6 +26,7 @@ func toTime(t *messages.Alarm_Timestamp) time.Time {
 type trigger func(context.Context) error
 
 const DEFAULT_LINGER_TIME = 15 * time.Minute
+const DEFAULT_COMMAND_TIMEOUT = 30 * time.Second
 
 type alarmTimer struct {
 	lingerTime time.Duration
@@ -187,6 +188,14 @@ func main() {
 	if switchOffCmd == "" {
 		log.Fatal("SWITCH_OFF_CMD environment variable is not set")
 	}
+	commandTimeout := DEFAULT_COMMAND_TIMEOUT
+	if val, ok := os.LookupEnv("COMMAND_TIMEOUT"); ok {
+		v, err := time.ParseDuration(val)
+		commandTimeout = v
+		if err != nil {
+			log.Fatalf("COMMAND_TIMEOUT environment variable is not a valid duration: %v", err)
+		}
+	}
 	lastAlarmFile := os.Getenv("LAST_ALARM_FILE")
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -215,9 +224,15 @@ func main() {
 
 	startListening(ctx, sub, func(ctx context.Context, pipeline <-chan *messages.Alarm) {
 		watcher(ctx, pipeline, func(ctx context.Context) error {
+			ctx, cancel := context.WithTimeout(ctx, commandTimeout)
+			defer cancel()
+
 			log.Println("switching on")
 			return executeCommand(ctx, switchOnCmd)
 		}, func(ctx context.Context) error {
+			ctx, cancel := context.WithTimeout(ctx, commandTimeout)
+			defer cancel()
+
 			log.Println("switching off")
 			return executeCommand(ctx, switchOffCmd)
 		}, timer)
@@ -265,9 +280,6 @@ func loadLastAlarmTime(lastAlarmFile string) time.Time {
 }
 
 func executeCommand(ctx context.Context, command string) error {
-	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
-	defer cancel()
-
 	cmd := exec.CommandContext(ctx, command)
 	out, err := cmd.StdoutPipe()
 	if err != nil {
