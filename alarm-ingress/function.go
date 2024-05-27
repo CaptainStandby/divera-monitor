@@ -14,6 +14,8 @@ import (
 )
 
 func init() {
+	log.SetFlags(0)
+
 	projectID := os.Getenv("PROJECT_ID")
 	if projectID == "" {
 		projectID = pubsub.DetectProjectID

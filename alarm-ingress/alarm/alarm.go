@@ -3,6 +3,7 @@ package alarm
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -89,6 +90,11 @@ func handle(w http.ResponseWriter, r *http.Request, pushAlarm func(context.Conte
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
+	log.Println(Entry{
+		Severity: "DEBUG",
+		Message:  fmt.Sprintf("Received divera message: %+v ", msg),
+	})
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	defer cancel()
