@@ -32,7 +32,7 @@ resource "google_cloudfunctions2_function" "alarm_ingress" {
   location   = local.region
 
   build_config {
-    runtime     = "go120"
+    runtime     = "go122"
     entry_point = "HandleAlarm"
     source {
       storage_source {
